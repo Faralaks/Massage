@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Войдите в систему</title>
+    <style>
+        body {
+            background: black;
+            align-content: center;
+            text-align: center;
+        }
+        body, input {
+            font-size: 2em;
+            font-family: Arial, serif;
+            outline: 5px black solid;
+        }
+        #loginDiv {
+            background: white;
+            width: 50%;
+            margin: 20% 25% 0 30%;
+
+        }
+
+    </style>
+</head>
+<body>
+        <form id="loginDiv" action="{{ url_for('login') }}" method="post">
+            <label>Введите Логин<br>
+                <input type="text" maxlength="32" name="login" placeholder="Введите логин" style="width: 80%">
+            </label>
+            <br>
+            <label>Введите Пароль<br>
+                <input type="text" maxlength="32" name="password" placeholder="Введите Пароль" style="width: 80%">
+            </label>
+            <br>
+
+            <input type="submit" value="Войти">
+
+        </form>
+
+</body>
+</html>

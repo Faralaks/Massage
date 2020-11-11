@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Главная Страница</title>
+    <style>
+        body {
+            background: black;
+            align-content: center;
+            text-align: center;
+        }
+        body, input, select {
+            margin-bottom: 2%;
+            font-size: 1.3em;
+            font-family: Arial, serif;
+            outline: 3px black solid;
+        }
+        #loginDiv {
+            background: white;
+            width: 90%;
+            margin: 5% 25% 0 5%;
+
+        }
+
+    </style>
+</head>
+<body>
+<div id="loginDiv">
+        <form action="{{ url_for('add') }}" method="post">
+            <br><br>
+            <label>Список учеников
+                <select name="list" style="width: 70%">
+                    <option>Выберите ученика</option>
+                    {% for i in people %}
+                    {% if i[1] < 10 %} <option>{{ i[0]+' — '+str(i[1]) }}</option> {% endif %}
+                    {%  endfor %}
+                </select>
+            </label><br>
+            <input type="submit" value="Добавить процедуру"><br>
+            {% for i in people %}
+                <a>{{ i[0]+' — '+str(i[1]) }}</a><br>
+            {%  endfor %}
+        </form>
+        <form action="{{ url_for('addNew') }}" method="post">
+
+            <br>
+            <a href="{{ url_for('download', when='cur') }}" download>Скачать данные за этот месяц</a>
+            <a href="{{ url_for('download', when='prev') }}" download>Скачать данные за предыдущий месяц</a>
+            <hr>
+            <br>
+
+            <span>Добавить ученика</span> <br>
+            <label>ФИО
+                <input type="text" maxlength="32" name="fam" placeholder="ФИО" style="width: 30%; margin-top: 2%;">
+            </label>
+            <label>Клас
+                <input type="text" maxlength="32" name="grade" placeholder="Класс" style="width: 15%; margin-top: 2%;">
+            </label>
+
+            <br>
+            <input type="submit" value="Добавить ученика"><br>
+    <hr>
+    </form>
+<form action="{{ url_for('delete') }}" method="post">
+            <br><span>Удалить ученика</span> <br>
+
+        <br>
+            <label>Список учеников для удаления
+                <select name="delList" style="width: 70%">
+                    <option>Выберите ученика для удаления</option>
+                    {% for i in people %}
+                    <option>{{ i[0]+' — '+str(i[1]) }}</option>
+                    {%  endfor %}
+                </select>
+            </label><br>
+
+    <input type="submit" value="Удалить"><br>
+
+        </form>
+    <hr>
+    <span>Нет процедур</span> <br>
+    <p>
+        {% for i in people %}
+                {% if i[1] == 0 %} <a>{{ i[0]+' — '+str(i[1]) }}</a><br>{% endif %}
+            {%  endfor %}
+    </p><br>
+<hr>
+    <span>Уже 10 процедур</span> <br>
+    <p>
+        {% for i in people %}
+                {% if i[1] >= 10 %} <a>{{ i[0]+' — '+str(i[1]) }}</a><br>{% endif %}
+            {%  endfor %}
+    </p><br>
+</div>
+
+
+</body>
+</html>
