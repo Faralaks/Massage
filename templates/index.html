@@ -103,6 +103,7 @@
                 {% if i[1] >= 10 %} <a>{{ i[0]+' — '+str(i[1]) }}</a><br>{% endif %}
             {%  endfor %}
     </p><hr>
+            <form action="{{ url_for('change') }}" method="post">
             <span>Редактировать ученика</span> <br><br>
             <label>Список учеников для редактирования
                 <select name="change" style="width: 70%" onchange="let u = this.value.split(' — '); newFio.value = u[0]; newGrade.value = u[1]; ">
@@ -114,7 +115,6 @@
             </label>
 
             <span>Новые данные</span> <br>
-            <form action="{{ url_for('change') }}" method="post">
             <label>Новое ФИО
                 <input type="text" id="newFio" maxlength="32" name="fam" placeholder="Новое ФИО" style="width: 30%; margin-top: 2%;">
             </label>
