@@ -50,7 +50,7 @@
             <br>
             <input type="submit" value="Добавить процедуру"><br>
             {% for i in people %}
-                <a>{{ i[0]+' — '+str(i[1]) }}</a><br>
+                <a>{{ i[0]+' — '+str(i[1])+(' — '+str(i[2]) if i[2] != None else "") }}</a><br>
             {%  endfor %}
         </form>
         <form action="{{ url_for('addNew') }}" method="post">
