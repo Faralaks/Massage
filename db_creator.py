@@ -5,7 +5,8 @@ dbcursor  = db.cursor()
 
 dbcursor.execute('''create table people (
                 uid TEXT NOT NULL UNIQUE,
-                count INTEGER  NOT NULL)''')
+                count INTEGER  NOT NULL,
+                last TEXT)''')
 dbcursor.execute('''create table proc (
             uid TEXT NOT NULL,
             d INTEGER NOT NULL,
