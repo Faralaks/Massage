@@ -179,13 +179,16 @@ def change():
     new_uid = form("fam").capitalize()+' — '+form("grade").upper()
     if old_uid == new_uid: return h1.format("Новые данные равны старым")
 
-    new_count = cur.execute("SELECT count FROM people WHERE uid=?", (old_uid, )).fetchone()[0]
+    new_count = cur.execute("SELECT count, last FROM people WHERE uid=?", (old_uid, )).fetchone()
     cur_count = cur.execute("SELECT count FROM people WHERE uid=?", (new_uid, )).fetchone()
     if cur_count:
         cur_count = cur_count[0]
     else:
         cur_count = 0
-    cur.execute('UPDATE people SET count=? WHERE uid=?', [cur_count+new_count, new_uid])
+        p(new_count)
+        cur.execute('INSERT INTO people VALUES (?,0,?)', (new_uid, new_count[1]))
+
+    cur.execute('UPDATE people SET count=? WHERE uid=?', [cur_count+new_count[0], new_uid])
     cur.execute('UPDATE proc SET uid=? WHERE uid=?', [new_uid, old_uid])
     cur.execute("DELETE FROM people WHERE uid=?", (old_uid, ))
 
