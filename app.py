@@ -78,7 +78,6 @@ def download(when='cur'):
 
     sheet = xlsx.create_sheet('Даты')
     dates = cur.execute('SELECT d, m, y, uid FROM proc WHERE  m=? AND y=? ORDER BY uid', (d.month, d.year)).fetchall()
-    p(dates)
     date_dict = {}
     for i in dates:
         dt = '%d.%d.%d'%(i[0], i[1], i[2])
@@ -128,13 +127,15 @@ def addNew():
 def add():
     if not session.get('login'): return redirect(url_for('login'))
     if form_get('list', None) is None or form_get('list', None) == 'Выберите ученика': return h1.format('Не был выбран ученик')
+    if form_get('date', None) is None: return h1.format('Не была получена дата процедуры')
     db = get_db()
     cur = db.cursor()
     form_data = form('list').split(' — ')
+    proc_date = form('date').split(' — ')[1].split('.')
     uid = form_data[0] +' — '+ form_data[1]
     data = cur.execute("SELECT count FROM people WHERE uid=?", (uid, )).fetchone()
     cur.execute('UPDATE people SET count=? WHERE uid=?', [data[0]+1, uid])
-    cur.execute('INSERT INTO proc VALUES (?,?,?,?)', (uid, date.today().day, date.today().month, date.today().year))
+    cur.execute('INSERT INTO proc VALUES (?,?,?,?)', (uid, proc_date[0], proc_date[1], proc_date[2]))
     db.commit()
     return redirect(url_for('index'))
 
