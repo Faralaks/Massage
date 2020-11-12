@@ -3,6 +3,7 @@
 login.json
 .DS_Store
 venv_massage/
+*.sqlite
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
