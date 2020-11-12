@@ -73,8 +73,8 @@ def download(when='cur'):
     else:
         d = date.today()
 
-    sheet = xlsx.get_sheet_by_name('Sheet')
-    xlsx.remove_sheet(sheet)
+    sheet = xlsx['Sheet']
+    xlsx.remove(sheet)
 
     sheet = xlsx.create_sheet('Даты')
     dates = cur.execute('SELECT d, m, y, uid FROM proc WHERE  m=? AND y=? ORDER BY uid', (d.month, d.year)).fetchall()
