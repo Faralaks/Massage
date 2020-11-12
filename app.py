@@ -185,7 +185,6 @@ def change():
         cur_count = cur_count[0]
     else:
         cur_count = 0
-        p(new_count)
         cur.execute('INSERT INTO people VALUES (?,0,?)', (new_uid, new_count[1]))
 
     cur.execute('UPDATE people SET count=? WHERE uid=?', [cur_count+new_count[0], new_uid])
