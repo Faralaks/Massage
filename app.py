@@ -166,6 +166,31 @@ def index():
 
 
 
+@app.route('/change', methods=['POST'])
+def change():
+    if not session.get('login'): return redirect(url_for('login'))
+    if form_get('change', None) is None or form_get('change', None) == 'Выберите ученика для редактирования': return h1.format('Не был выбран ученик для редактирования')
+    if form_get('fam', None) is None or form_get('grade', None) is None or form_get('fam', None) == '' or form_get('grade', None) == '': return h1.format('Не получено новое ФИО или Класс ученика')
+
+    db = get_db()
+    cur = db.cursor()
+
+    old_uid = form('change')
+    new_uid = form("fam").capitalize()+' — '+form("grade").upper()
+    if old_uid == new_uid: return h1.format("Новые данные равны старым")
+
+    new_count = cur.execute("SELECT count FROM people WHERE uid=?", (old_uid, )).fetchone()[0]
+    cur_count = cur.execute("SELECT count FROM people WHERE uid=?", (new_uid, )).fetchone()
+    if cur_count:
+        cur_count = cur_count[0]
+    else:
+        cur_count = 0
+    cur.execute('UPDATE people SET count=? WHERE uid=?', [cur_count+new_count, new_uid])
+    cur.execute('UPDATE proc SET uid=? WHERE uid=?', [new_uid, old_uid])
+    cur.execute("DELETE FROM people WHERE uid=?", (old_uid, ))
+
+    db.commit()
+    return redirect(url_for('index'))
 
 
 
