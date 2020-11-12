@@ -7,6 +7,8 @@ from  datetime import date, timedelta
 
 path = path.join(getcwd(), 'db.sqlite')
 
+week_days = {1:"Понедельник",2:"Вторник",3:"Среда",4:"Четверг",5:"Пятница",6:"Суббота",7:"Воскресенье",}
+
 app = Flask(__name__)
 app.secret_key = b'Ni5t~Igd51Mp7|xt\xf4j\x121\xd8Q2\xaa.\xaa!\x18mf0Uie}*bWlhB12323123'
 app.templates_auto_reload = True
@@ -152,14 +154,14 @@ def delete():
 
 
 
-
 @app.route('/')
 def index():
     if not session.get('login'): return redirect(url_for('login'))
     db = get_db()
     cur = db.cursor()
     people = cur.execute('SELECT * FROM people').fetchall()
-    return render_template('index.html', people=people, str=str)
+    today = date.today()
+    return render_template('index.html', people=people, str=str, today=today, timedelta=timedelta, week_days=week_days)
 
 
 

@@ -36,6 +36,18 @@
                     {%  endfor %}
                 </select>
             </label><br>
+            <label>Дата
+                <select name="date" style="width: 20%">
+                    <option>{{ "Cегодня %s.%s- %s"% (today.day, today.month, week_days[today.isoweekday()]) }}</option>
+                    <option>{{ "Вчера %s.%s- %s"% ((today - timedelta(days=1)).day, (today - timedelta(days=1)).month, week_days[(today - timedelta(days=1)).isoweekday()]) }}</option>
+
+                    {% for i in range(2, 8) %}
+                        <option>{{ "%s.%s - %s"% ((today - timedelta(days=i)).day, (today - timedelta(days=i)).month, week_days[(today - timedelta(days=i)).isoweekday()]) }}</option>
+                        {%  endfor %}
+                </select>
+            </label>
+
+            <br>
             <input type="submit" value="Добавить процедуру"><br>
             {% for i in people %}
                 <a>{{ i[0]+' — '+str(i[1]) }}</a><br>
