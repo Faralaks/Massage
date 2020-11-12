@@ -119,7 +119,7 @@ def addNew():
     if form_get('fam', None) is None or form_get('grade', None) is None or form_get('fam', None) == '' or form_get('grade', None) == '': return h1.format('Не получено имя или класс ученика')
     db = get_db()
     cur = db.cursor()
-    cur.execute('INSERT INTO people VALUES (?,0)', (fam(form('fam'))+' — '+grade(form('grade')),))
+    cur.execute('INSERT INTO people VALUES (?,0,?)', (fam(form('fam'))+' — '+grade(form('grade')),None))
     db.commit()
     return redirect(url_for('index'))
 
@@ -134,7 +134,7 @@ def add():
     proc_date = form('date').split(' — ')[1].split('.')
     uid = form_data[0] +' — '+ form_data[1]
     data = cur.execute("SELECT count FROM people WHERE uid=?", (uid, )).fetchone()
-    cur.execute('UPDATE people SET count=? WHERE uid=?', [data[0]+1, uid])
+    cur.execute('UPDATE people SET count=?, last=? WHERE uid=?', [data[0]+1, ".".join(proc_date), uid])
     cur.execute('INSERT INTO proc VALUES (?,?,?,?)', (uid, proc_date[0], proc_date[1], proc_date[2]))
     db.commit()
     return redirect(url_for('index'))
