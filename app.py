@@ -8,14 +8,13 @@ from config import  DB_PATH, HOST, PORT, LOGIN, PAS
 path =DB_PATH
 
 week_days = {1:"Понедельник",2:"Вторник",3:"Среда",4:"Четверг",5:"Пятница",6:"Суббота",7:"Воскресенье",}
-cap = lambda s: " ".join(list(map(lambda st: st.capitalize(), s.split())))
 
 app = Flask(__name__)
 app.config.from_object('config')
 
 h1 = '<h1>{}</h1>'
-fam = lambda s : s.strip().capitalize()
-grade = lambda s : s.strip().upper()
+cap = lambda s: " ".join(list(map(lambda st: st.capitalize(), s.split())))
+up = lambda s : s.strip().upper()
 
 form = lambda key: request.form[key]
 form_get = lambda key, ret: request.form.get(key, ret)
@@ -100,6 +99,7 @@ def download(when='cur'):
 
     for i in proc.items():
         fam, grade = i[0].split(' — ')[:2]
+        fam = cap(fam)
         sheet.append([fam, grade, len(i[1])]+i[1])
 
 
@@ -119,7 +119,7 @@ def addNew():
     if form_get('fam', None) is None or form_get('grade', None) is None or form_get('fam', None) == '' or form_get('grade', None) == '': return h1.format('Не получено имя или класс ученика')
     db = get_db()
     cur = db.cursor()
-    cur.execute('INSERT INTO people VALUES (?,0,?)', (fam(form('fam'))+' — '+grade(form('grade')),None))
+    cur.execute('INSERT INTO people VALUES (?,0,?)', (cap(form('fam'))+' — '+up(form('grade')),None))
     db.commit()
     return redirect(url_for('index'))
 
@@ -176,7 +176,7 @@ def change():
     cur = db.cursor()
 
     old_uid = form('change')
-    new_uid = form("fam").capitalize()+' — '+form("grade").upper()
+    new_uid = cap(form("fam"))+' — '+up(form("grade"))
     if old_uid == new_uid: return h1.format("Новые данные равны старым")
 
     new_count = cur.execute("SELECT count, last FROM people WHERE uid=?", (old_uid, )).fetchone()
