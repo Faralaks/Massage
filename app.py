@@ -1,17 +1,16 @@
-from os import path, getcwd
 from flask import Flask, g, redirect, render_template, request, url_for, session, send_file
 import sqlite3
 from openpyxl import Workbook
 from io import  BytesIO
 from  datetime import date, timedelta
+from config import  DB_PATH, HOST, PORT, LOGIN, PAS
 
-path = path.join(getcwd(), 'db.sqlite')
+path =DB_PATH
 
 week_days = {1:"Понедельник",2:"Вторник",3:"Среда",4:"Четверг",5:"Пятница",6:"Суббота",7:"Воскресенье",}
 
 app = Flask(__name__)
-app.secret_key = b'Ni5t~Igd51Mp7|xt\xf4j\x121\xd8Q2\xaa.\xaa!\x18mf0Uie}*bWlhB12323123'
-app.templates_auto_reload = True
+app.config.from_object('config')
 
 h1 = '<h1>{}</h1>'
 fam = lambda s : s.strip().capitalize()
@@ -47,7 +46,7 @@ def login():
     if session.get('login'): return redirect(url_for('index'))
     if request.method == 'POST':
 
-        if request.form.get('login', None) == '' and request.form.get('password', None) == "":
+        if request.form.get('login', None).lower() == LOGIN and request.form.get('password', None) == PAS:
             session['login'] = True
             return redirect(url_for('index'))
 
@@ -200,5 +199,4 @@ def change():
 
 
 if __name__ == '__main__':
-    app.run()
-    #app.run(host='0.0.0.0')
+    app.run(host=HOST, port=PORT)
