@@ -1,6 +1,5 @@
 .code/
 .idea/
-login.json
 .DS_Store
 venv_massage/
 *.sqlite
