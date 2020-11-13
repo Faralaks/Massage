@@ -8,6 +8,7 @@ from config import  DB_PATH, HOST, PORT, LOGIN, PAS
 path =DB_PATH
 
 week_days = {1:"Понедельник",2:"Вторник",3:"Среда",4:"Четверг",5:"Пятница",6:"Суббота",7:"Воскресенье",}
+cap = lambda s: " ".join(list(map(lambda st: st.capitalize(), s.split())))
 
 app = Flask(__name__)
 app.config.from_object('config')
