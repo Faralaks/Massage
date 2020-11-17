@@ -10,10 +10,8 @@ WORKDIR /opt/massage/
 
 COPY app.py .
 COPY config.py .
-COPY db.sqlite .
 COPY templates ./templates
 
 EXPOSE 5000
 
-# run the application
 CMD ["python3", "./app.py"]
