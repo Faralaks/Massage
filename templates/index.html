@@ -38,7 +38,7 @@
             </label><br>
             <label>Дата
                 <select name="date" style="width: 20%">
-                    <option>{{ "Cегодня — %s.%s.%s"% (today.day, today.month, today.year) }}</option>
+                    <option>{{ "Сегодня — %s.%s.%s"% (today.day, today.month, today.year) }}</option>
                     <option>{{ "Вчера — %s.%s.%s"% ((today - timedelta(days=1)).day, (today - timedelta(days=1)).month, (today - timedelta(days=1)).year) }}</option>
 
                     {% for i in range(2, 8) %}
