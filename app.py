@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 from flask import Flask, g, redirect, render_template, request, url_for, session, send_file
 import sqlite3
 from openpyxl import Workbook
@@ -5,7 +6,7 @@ from io import  BytesIO
 from  datetime import date, timedelta
 from config import  DB_PATH, HOST, PORT, LOGIN, PAS
 
-path =DB_PATH
+path = DB_PATH
 
 week_days = {1:"Понедельник",2:"Вторник",3:"Среда",4:"Четверг",5:"Пятница",6:"Суббота",7:"Воскресенье",}
 
