@@ -1,0 +1,9 @@
+version: '2'
+services:
+  massage:
+    image: faralaks/massage
+    ports:
+      - "5001:5000"
+    volumes:
+      - /Users/faralaks/Desktop/massage/db:/opt/massage/db
+    restart: unless-stopped
