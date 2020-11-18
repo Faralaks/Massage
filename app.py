@@ -83,7 +83,7 @@ def download(when='cur'):
         dt = (i[2], i[1], i[0])
         if date_dict.get(dt) is None: date_dict[dt] = []
         date_dict[dt].append(i[3])
-    sorted_dates = sorted(date_dict.items())
+    sorted_dates = sorted(date_dict.items(), key=lambda x: x[0][2])
     for i in sorted_dates:
         sheet.append(['%d.%d.%d' % (i[0][2], i[0][1], i[0][0]), len(i[1])]+i[1])
 
@@ -101,7 +101,6 @@ def download(when='cur'):
     for i in proc.items():
         fam, grade = i[0].split(' — ')[:2]
         fam = cap(fam)
-        print(sorted(i[1], key=lambda x: x.split('.')[::-1]))
         sheet.append([fam, grade, len(i[1])]+sorted(i[1], key=lambda x: int(x.split('.')[0])))
 
 
