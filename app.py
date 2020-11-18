@@ -101,7 +101,8 @@ def download(when='cur'):
     for i in proc.items():
         fam, grade = i[0].split(' — ')[:2]
         fam = cap(fam)
-        sheet.append([fam, grade, len(i[1])]+i[1])
+        print(sorted(i[1], key=lambda x: x.split('.')[::-1]))
+        sheet.append([fam, grade, len(i[1])]+sorted(i[1], key=lambda x: int(x.split('.')[0])))
 
 
     xlsx.save(stream)
