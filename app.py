@@ -80,12 +80,12 @@ def download(when='cur'):
     dates = cur.execute('SELECT d, m, y, uid FROM proc WHERE  m=? AND y=? ORDER BY uid', (d.month, d.year)).fetchall()
     date_dict = {}
     for i in dates:
-        dt = '%d.%d.%d'%(i[0], i[1], i[2])
+        dt = (i[2], i[1], i[0])
         if date_dict.get(dt) is None: date_dict[dt] = []
         date_dict[dt].append(i[3])
-
-    for i in date_dict.items():
-        sheet.append([i[0], len(i[1])]+i[1])
+    sorted_dates = sorted(date_dict.items())
+    for i in sorted_dates:
+        sheet.append(['%d.%d.%d' % (i[0][2], i[0][1], i[0][0]), len(i[1])]+i[1])
 
 
 
