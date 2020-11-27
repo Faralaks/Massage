@@ -1,6 +1,10 @@
+import sqlite3
+from io import BytesIO
+
 import telebot
-from config import TELEGRAM_TOKEN, TRUSTED
+from config import TELEGRAM_TOKEN, TRUSTED, DB_PATH
 import os
+from app import make_xlsx
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
 
 
@@ -8,9 +12,23 @@ bot = telebot.TeleBot(TELEGRAM_TOKEN)
 def get_text_messages(message):
     uid = message.from_user.id
     if uid in TRUSTED:
-        bot.send_message(uid, "На свою базу!")
+        base = open("./db/db.sqlite", "rb")
+        bot.send_document(uid, caption="На Свою Базу!", data=base)
+        base.close()
+
+        stream = BytesIO()
+        make_xlsx(stream, "cur")
+        stream.name = "Отчет за текущий месяц.xlsx"
+        bot.send_document(uid, caption="На За Текущий Месяц!", data=stream, disable_notification=True)
+        del stream
+
+        stream = BytesIO()
+        make_xlsx(stream, 'prev')
+        stream.name = "Отчет за предыдущий месяц.xlsx"
+        bot.send_document(uid, caption="На За Предыдущий Месяц!", data=stream, disable_notification=True)
+
     else:
-        bot.send_message(uid, "Ты чужой или ввел неверную команду, почему твой UID =\n %d"%uid)
+        bot.send_message(uid, "Ты чужой, почему твой UID = %d?"%uid)
 
 
 def run():
