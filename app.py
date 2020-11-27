@@ -4,7 +4,9 @@ import sqlite3
 from openpyxl import Workbook
 from io import  BytesIO
 from  datetime import date, timedelta
-from config import  DB_PATH, HOST, PORT, LOGIN, PAS
+from config import  DB_PATH, HOST, PORT, LOGIN, PAS, TELEGRAM_TOKEN
+from threading import Thread
+import bot
 
 path = DB_PATH
 
@@ -25,6 +27,10 @@ def p(*items):
     for i in items:
         print('\t', i)
     print('\n-----------------------\n')
+
+
+
+
 
 
 
@@ -198,7 +204,8 @@ def change():
 
 
 
-
-
 if __name__ == '__main__':
+    tele_bot = Thread(target=bot.run, daemon=True)
+    tele_bot.start()
     app.run(host=HOST, port=PORT)
+    tele_bot.join()

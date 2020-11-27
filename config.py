@@ -10,3 +10,5 @@ LOGIN = "login"
 PAS = 'pas'
 COOKIE_SECURE = 'Secure'
 COOKIE_DURATION = timedelta(days=5)
+TELEGRAM_TOKEN = ""
+TRUSTED = {}
