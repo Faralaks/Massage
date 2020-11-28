@@ -1,9 +1,6 @@
-import sqlite3
 from io import BytesIO
-
 import telebot
 from config import TELEGRAM_TOKEN, TRUSTED, DB_PATH
-import os
 from app import make_xlsx
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
 
@@ -32,10 +29,5 @@ def get_text_messages(message):
 
 
 def run():
-    global trusted
-    trusted = []
-    if os.path.exists("trusted.txt"):
-        trusted = open("trusted.txt", "r").readlines()
-    trusted_file = open("trusted.txt", "w")
     print(' >>> Run Telegram bot')
     bot.polling()

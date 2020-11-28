@@ -4,11 +4,9 @@ import sqlite3
 from openpyxl import Workbook
 from io import  BytesIO
 from  datetime import date, timedelta
-from config import  DB_PATH, HOST, PORT, LOGIN, PAS, TELEGRAM_TOKEN
+from config import  DB_PATH, HOST, PORT, LOGIN, PAS
 from threading import Thread
 import bot
-
-path = DB_PATH
 
 week_days = {1:"Понедельник",2:"Вторник",3:"Среда",4:"Четверг",5:"Пятница",6:"Суббота",7:"Воскресенье",}
 
@@ -31,13 +29,10 @@ def p(*items):
 
 
 
-
-
-
 def get_db():
     db = getattr(g, 'db', None)
     if db is None:
-        db = g.db = sqlite3.connect(path)
+        db = g.db = sqlite3.connect(DB_PATH)
     return db
 
 
