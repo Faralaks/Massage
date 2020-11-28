@@ -5,8 +5,8 @@ from openpyxl import Workbook
 from io import  BytesIO
 from  datetime import date, timedelta
 from config import  DB_PATH, HOST, PORT, LOGIN, PAS
-
-path = DB_PATH
+from threading import Thread
+import bot
 
 week_days = {1:"Понедельник",2:"Вторник",3:"Среда",4:"Четверг",5:"Пятница",6:"Суббота",7:"Воскресенье",}
 
@@ -28,10 +28,11 @@ def p(*items):
 
 
 
+
 def get_db():
     db = getattr(g, 'db', None)
     if db is None:
-        db = g.db = sqlite3.connect(path)
+        db = g.db = sqlite3.connect(DB_PATH)
     return db
 
 
@@ -57,13 +58,9 @@ def login():
         return render_template('login.html')
 
 
-@app.route('/download/<when>')
-def download(when='cur'):
-    if not session.get('login'): return redirect(url_for('login'))
-    stream = BytesIO()
+def make_xlsx(stream, when="cur"):
     xlsx = Workbook()
-    sheet = xlsx.active
-    db = get_db()
+    db = sqlite3.connect(DB_PATH)
     cur = db.cursor()
 
     if when != 'cur':
@@ -85,9 +82,7 @@ def download(when='cur'):
         date_dict[dt].append(i[3])
     sorted_dates = sorted(date_dict.items(), key=lambda x: x[0][2])
     for i in sorted_dates:
-        sheet.append(['%d.%d.%d' % (i[0][2], i[0][1], i[0][0]), len(i[1])]+i[1])
-
-
+        sheet.append(['%d.%d.%d' % (i[0][2], i[0][1], i[0][0]), len(i[1])] + i[1])
 
     sheet = xlsx.create_sheet('Процедуры')
     procs = cur.execute('SELECT * FROM proc WHERE  m=? AND y=? ORDER BY uid', (d.month, d.year)).fetchall()
@@ -95,18 +90,24 @@ def download(when='cur'):
     proc = {}
     for i in procs:
         if proc.get(i[0]) is None: proc[i[0]] = []
-        proc[i[0]].append('%d.%d.%d'%(i[1], i[2], i[3]))
-
+        proc[i[0]].append('%d.%d.%d' % (i[1], i[2], i[3]))
 
     for i in proc.items():
         fam, grade = i[0].split(' — ')[:2]
         fam = cap(fam)
-        sheet.append([fam, grade, len(i[1])]+sorted(i[1], key=lambda x: int(x.split('.')[0])))
-
+        sheet.append([fam, grade, len(i[1])] + sorted(i[1], key=lambda x: int(x.split('.')[0])))
 
     xlsx.save(stream)
     xlsx.close()
     stream.seek(0)
+
+
+@app.route('/download/<when>')
+def download(when='cur'):
+    if not session.get('login'): return redirect(url_for('login'))
+    stream = BytesIO()
+    make_xlsx(stream, when)
+
     return send_file(stream, cache_timeout=0, as_attachment=True, attachment_filename='massage_counter.xlsx')
 
 
@@ -198,7 +199,15 @@ def change():
 
 
 
-
-
 if __name__ == '__main__':
+    bot_listener = Thread(target=bot.run, daemon=True)
+    bot_db_sender = Thread(target=bot.db_auto_sender, daemon=True)
+    bot_cur_xl_sender = Thread(target=bot.cur_xl_auto_sender, daemon=True)
+    bot_prev_xl_sender = Thread(target=bot.prev_xl_auto_sender, daemon=True)
+
+    bot_listener.start()
+    bot_db_sender.start()
+    bot_cur_xl_sender.start()
+    bot_prev_xl_sender.start()
+
     app.run(host=HOST, port=PORT)
