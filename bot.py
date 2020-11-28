@@ -1,6 +1,7 @@
+import time
 from io import BytesIO
 import telebot
-from config import TELEGRAM_TOKEN, TRUSTED, DB_PATH
+from config import TELEGRAM_TOKEN, TRUSTED, DB_PATH, AUTO_DB_SEND_PERIOD, AUTO_SEND_RECIPIENT, AUTO_CUR_XL_SEND_PERIOD, AUTO_PREV_XL_SEND_PERIOD
 from app import make_xlsx
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
 
@@ -39,6 +40,28 @@ def get_text_messages(message):
     else:
         bot.send_message(uid, "Ты чужой, почему твой UID = %d?"%uid)
 
+
+def db_auto_sender():
+    print(' >>> Run Telegram bot db_auto_sender')
+    while True:
+        for uid in AUTO_SEND_RECIPIENT:
+            send_db(uid)
+        time.sleep(AUTO_DB_SEND_PERIOD)
+
+def cur_xl_auto_sender():
+    print(' >>> Run Telegram bot cur_xl_auto_sender')
+    while True:
+        for uid in AUTO_SEND_RECIPIENT:
+            send_cur_xl(uid)
+        time.sleep(AUTO_CUR_XL_SEND_PERIOD)
+
+
+def prev_xl_auto_sender():
+    print(' >>> Run Telegram bot prev_xl_auto_sender')
+    while True:
+        for uid in AUTO_SEND_RECIPIENT:
+            send_prev_xl(uid)
+        time.sleep(AUTO_PREV_XL_SEND_PERIOD)
 
 
 

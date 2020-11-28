@@ -200,7 +200,14 @@ def change():
 
 
 if __name__ == '__main__':
-    tele_bot = Thread(target=bot.run, daemon=True)
-    tele_bot.start()
+    bot_listener = Thread(target=bot.run, daemon=True)
+    bot_db_sender = Thread(target=bot.db_auto_sender, daemon=True)
+    bot_cur_xl_sender = Thread(target=bot.cur_xl_auto_sender, daemon=True)
+    bot_prev_xl_sender = Thread(target=bot.prev_xl_auto_sender, daemon=True)
+
+    bot_listener.start()
+    bot_db_sender.start()
+    bot_cur_xl_sender.start()
+    bot_prev_xl_sender.start()
+
     app.run(host=HOST, port=PORT)
-    tele_bot.join()
