@@ -1,14 +1,19 @@
 #!/usr/bin/python3
-from flask import Flask, g, redirect, render_template, request, url_for, session, send_file
+import json
+from string import  ascii_uppercase as ALPH
+from flask import Flask, g, redirect, render_template, request, url_for, session, send_file, jsonify
 import sqlite3
-from openpyxl import Workbook
+from openpyxl import Workbook, load_workbook
 from io import  BytesIO
 from  datetime import date, timedelta
-from config import  DB_PATH, HOST, PORT, LOGIN, PAS
+from config import DB_PATH, HOST, PORT, LOGIN, PAS, O_LOGIN
 from threading import Thread
 import bot
+from base64 import b64encode as b64enc, b64decode as b64dec
 
 week_days = {1:"Понедельник",2:"Вторник",3:"Среда",4:"Четверг",5:"Пятница",6:"Суббота",7:"Воскресенье",}
+ALPH = list(ALPH)
+ALPH += ["AA", "AB", "AC", "AD", "AE", "AF", "AG", "AH", "AI", "AK", "AL", "AN"]
 
 app = Flask(__name__)
 app.config.from_object('config')
@@ -45,11 +50,13 @@ def close_connection(exception):
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    if session.get('login'): return redirect(url_for('index'))
     if request.method == 'POST':
 
-        if request.form.get('login', None).lower() == LOGIN and request.form.get('password', None) == PAS:
-            session['login'] = True
+        lgn = request.form.get('login', None)
+        if not lgn: h1.format("Не был получен логин пользователя")
+        lgn = lgn.lower()
+        if (lgn == LOGIN or lgn == O_LOGIN) and request.form.get('password', None) == PAS:
+            session['login'] = lgn
             return redirect(url_for('index'))
 
         return redirect(url_for('login'))
@@ -106,22 +113,38 @@ def make_xlsx(stream, when="cur"):
 def download(when='cur'):
     if not session.get('login'): return redirect(url_for('login'))
     stream = BytesIO()
-    make_xlsx(stream, when)
-
-    return send_file(stream, cache_timeout=0, as_attachment=True, attachment_filename='massage_counter.xlsx')
-
-
-
-
+    if session["login"] == LOGIN:
+        make_xlsx(stream, when)
+        return send_file(stream, cache_timeout=0, as_attachment=True, attachment_filename='massage_counter.xlsx')
+    else:
+        o_make_xlsx(stream, when)
+        return send_file(stream, cache_timeout=0, as_attachment=True, attachment_filename='auto-report.xlsx')
 
 
 @app.route('/addNew', methods=['POST'])
 def addNew():
     if not session.get('login'): return redirect(url_for('login'))
-    if form_get('fam', None) is None or form_get('grade', None) is None or form_get('fam', None) == '' or form_get('grade', None) == '': return h1.format('Не получено имя или класс ученика')
     db = get_db()
     cur = db.cursor()
-    cur.execute('INSERT INTO people VALUES (?,0,?)', (cap(form('fam'))+' — '+up(form('grade')),None))
+    if session["login"] == LOGIN:
+        if form_get('fam', None) is None or form_get('grade', None) is None or form_get('fam', None) == '' or form_get('grade', None) == '': return h1.format('Не получено имя или класс ученика')
+        cur.execute('INSERT INTO people VALUES (?,0,?)', (cap(form('fam'))+' — '+up(form('grade')),None))
+    else:
+        if request.files.get('file') is None: return h1.format('Не загружен файл')
+        file = request.files['file']
+        stream = BytesIO()
+        file.save(stream)
+        wb = load_workbook(filename=stream)
+        ws = wb.active
+        i = 1
+        while True:
+            name = ws["A"+str(i)].value
+            grade = ws["B"+str(i)].value
+            if not name: break
+
+            cur.execute('INSERT INTO kinders VALUES (?,?,?)', [b64enc((name + " " + grade).encode("utf-8")).decode("utf-8"), name, grade])
+            i += 1
+
     db.commit()
     return redirect(url_for('index'))
 
@@ -162,9 +185,14 @@ def index():
     if not session.get('login'): return redirect(url_for('login'))
     db = get_db()
     cur = db.cursor()
-    people = cur.execute('SELECT * FROM people').fetchall()
     today = date.today()
-    return render_template('index.html', people=people, str=str, today=today, timedelta=timedelta, week_days=week_days)
+    if session["login"] == LOGIN:
+        people = cur.execute('SELECT * FROM people').fetchall()
+        return render_template('index.html', people=people, str=str, today=today, timedelta=timedelta, week_days=week_days)
+    else:
+        kinders = cur.execute('SELECT * FROM kinders').fetchall()
+        return render_template('o_index.html', kinders=kinders, b64dec=b64dec, str=str, today=today, timedelta=timedelta, week_days=week_days)
+
 
 
 
@@ -199,15 +227,81 @@ def change():
 
 
 
+@app.route('/o_add', methods=['POST'])
+def o_add():
+    if not session.get('login'): return redirect(url_for('login'))
+    if form_get('kinders', None) is None: return h1.format('Данные не были получены в поле kinders')
+    if form_get('date', None) is None: return h1.format('Не была получена дата')
+    db = get_db()
+    cur = db.cursor()
+    kinders = json.loads(form('kinders'))
+    form_date = form('date').split(' — ')[1].split('.')
+    for uid, tps in kinders.items():
+        for tp in tps:
+            cur.execute('INSERT INTO zan VALUES (?,?,?,?,?)', (uid, tp, form_date[0], form_date[1], form_date[2]))
+
+    db.commit()
+    return jsonify({"msg":"Успешно", "kind":0})
+
+
+def o_make_xlsx(stream, when="cur"):
+    xlsx = Workbook()
+    db = sqlite3.connect(DB_PATH)
+    cur = db.cursor()
+
+    if when != 'cur':
+        today = date.today()
+        first = today.replace(day=1)
+        dt = first - timedelta(days=1)
+    else:
+        dt = date.today()
+    d, m = dt.day, dt.month
+    sheet = xlsx['Sheet']
+    xlsx.remove(sheet)
+
+    sheet = xlsx.create_sheet('Отчет')
+    kinders_from_db = cur.execute('SELECT uid, name, grade FROM kinders').fetchall()
+    kinders = {}
+    int_offset = 3
+    let_offset = 3
+    for i, k in enumerate(kinders_from_db, int_offset):
+        kinders[k[0]] = [str(i), k[1], k[2]]
+        num = str(i)
+        sheet['A'+num] = i-int_offset+1
+        sheet['B'+num] = k[1]
+        sheet['C'+num] = k[2]
+
+    sheet["A"+str(int_offset-1)] = "№"
+    sheet["B"+str(int_offset-1)] = "Ф.И. ребенка"
+    sheet["C"+str(int_offset-1)] = "Класс"
+
+    for day in range(1, 32):
+        zans = cur.execute('SELECT d, m, tp, uid FROM zan WHERE  d=? AND m=? AND y=?', (day, m, dt.year)).fetchall()
+        if zans == []: continue
+        for z in zans:
+            k = kinders[z[3]]
+            call = ALPH[let_offset]+k[0]
+            if sheet[call].value: sheet[call] = sheet[call].value +  z[2]
+            else: sheet[call] = z[2]
+
+        sheet[ALPH[let_offset]+str(int_offset-1)] = day
+        sheet[ALPH[let_offset]+str(int_offset+len(kinders.keys()))] = day
+        let_offset += 1
+
+    xlsx.save(stream)
+    xlsx.close()
+    stream.seek(0)
+
+
 if __name__ == '__main__':
     bot_listener = Thread(target=bot.run, daemon=True)
     bot_db_sender = Thread(target=bot.db_auto_sender, daemon=True)
-    bot_cur_xl_sender = Thread(target=bot.cur_xl_auto_sender, daemon=True)
-    bot_prev_xl_sender = Thread(target=bot.prev_xl_auto_sender, daemon=True)
+    #bot_cur_xl_sender = Thread(target=bot.cur_xl_auto_sender, daemon=True)
+    #bot_prev_xl_sender = Thread(target=bot.prev_xl_auto_sender, daemon=True)
 
     bot_listener.start()
     bot_db_sender.start()
-    bot_cur_xl_sender.start()
-    bot_prev_xl_sender.start()
+    #bot_cur_xl_sender.start()
+    #bot_prev_xl_sender.start()
 
     app.run(host=HOST, port=PORT)

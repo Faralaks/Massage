@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <meta name="yandex" content="noindex, nofollow">
+    <meta name="google" content="noindex">
+    <meta name="duckduckgo" content="noindex">
+    <meta charset="UTF-8">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <title>Auto-Report by Faralaks | Главная страница</title>
+    <style>
+        .dn {
+            display: none;
+        }
+        body {
+            background: black;
+            align-content: center;
+            text-align: center;
+        }
+        body, input, select {
+            margin-bottom: 2%;
+            font-size: 1.3em;
+            font-family: Arial, serif;
+            outline: 3px black solid;
+        }
+        #loginDiv {
+            background: white;
+            width: 90%;
+            margin: 5% 25% 0 5%;
+
+        }
+        label {
+            margin-right: 15px;
+        }
+        input[type="checkbox"] {
+            margin-left: 5px;
+        }
+
+
+    </style>
+    <script>
+        let kinders = [
+            {% for i in kinders %} ["{{ i[0] }}", "{{ b64dec(i[0]).decode('utf-8') }}"], {% endfor %}
+        ]
+
+        $("#namesPlace").ready(function (){
+            let i = 0
+            kinders.forEach(function (e) {
+                let tmpl =
+                        `<span onclick="$('#${i}').show()">${e[1]}<br>
+                            <span class="dn" id="${i}">
+                                <label>Индивидуальное<input  type="checkbox" name="k${i}-1" value="И"></label>
+                                <label>Групповое<input type="checkbox" name="k${i}-2" value="Г"></label>
+                                <label>Сопровождение<input type="checkbox" name="k${i}-3" value="С"></label>
+                                <label>Дистант<input type="checkbox" name="k${i}-4" value="Д"></label>
+                            </span><br>
+                        </span>`
+                $("#namesPlace").append(tmpl)
+                i++
+
+            })
+        })
+
+        function save() {
+            let req = {kinders: {}, date: $('#date option:selected').text()}
+            $('input:checkbox:checked').each(function() {
+                let ch = $(this)
+                let kinder = kinders[+ch.parent().parent().attr("id")][0]
+                if (!req.kinders[kinder]) req.kinders[kinder] = []
+                req.kinders[kinder].push(ch.val())
+            });
+            console.log(req)
+            req.kinders = JSON.stringify(req.kinders)
+            if (req.kinders === "{}") { alert("Ничего не выбрано!"); return}
+            console.log(req)
+
+            $.post("/o_add", req).done(function (response) {
+                alert(response.msg)
+                if (response.kind === 0) window.location.href = "/"
+            })
+
+
+        }
+
+
+    </script>
+</head>
+<body>
+<div id="loginDiv">
+        <form>
+            <br><br>
+            <label>Дата
+                <select name="date" id="date" style="width: 20%">
+                    <option>{{ "Сегодня — %s.%s.%s"% (today.day, today.month, today.year) }}</option>
+                    <option>{{ "Вчера — %s.%s.%s"% ((today - timedelta(days=1)).day, (today - timedelta(days=1)).month, (today - timedelta(days=1)).year) }}</option>
+
+                    {% for i in range(2, 8) %}
+                        <option>{{ "%s — %s.%s.%s"% (week_days[(today - timedelta(days=i)).isoweekday()], (today - timedelta(days=i)).day, (today - timedelta(days=i)).month, (today - timedelta(days=i)).year) }}</option>
+                    {%  endfor %}
+                </select>
+            </label><br>
+
+            <input type="button" value="Внести" onclick="save()"><br>
+
+            <div id="namesPlace">
+
+            </div>
+            <input type="button" value="Внести" onclick="save()"><br>
+        </form>
+
+
+
+        <form action="{{ url_for('addNew') }}" method="post" enctype="multipart/form-data">
+
+            <br>
+            <a href="{{ url_for('download', when='cur') }}" download>Скачать данные за этот месяц</a>
+            <a href="{{ url_for('download', when='prev') }}" download>Скачать данные за предыдущий месяц</a>
+            <hr>
+            <br>
+
+            <span>Добавить детей</span> <br>
+            <br>
+            <input type="file" name="file" class="">
+            <input type="submit" value="Добавить"><br>
+    <hr>
+    </form>
+
+
+
+    <br><br>
+</div>
+
+
+</body>
+</html>
