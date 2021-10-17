@@ -34,18 +34,22 @@ def db_auto_sender(bot):
     print(' >>> Run Telegram bot db_auto_sender')
     while True:
         for uid in AUTO_SEND_RECIPIENT:
+            time.sleep(2)
             print(' >>> db send to  ' + str(uid))
-            send_db(uid, bot)
+            try: send_db(uid, bot)
+            except:
+                print("А я все равно отправлю!")
+                time.sleep(3)
+                send_db(uid, bot)
         time.sleep(AUTO_DB_SEND_PERIOD)
 
 def zip_auto_sender(bot):
-    print(' >>> Run Telegram bot cur_xl_auto_sender')
+    print(' >>> Run Telegram bot zip_auto_sender')
     while True:
-        time.sleep(AUTO_ZIP_SEND_PERIOD)
         for uid in AUTO_SEND_RECIPIENT:
             print(' >>> ZIP send to  ' + str(uid))
             send_files(uid, bot)
-
+        time.sleep(AUTO_ZIP_SEND_PERIOD)
 
 
 def run(bot):

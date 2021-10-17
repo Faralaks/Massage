@@ -51,7 +51,8 @@
                             <span class="dn" id="${i}">
                                 <label>Индивидуальное<input  type="checkbox" name="k${i}-1" value="И"></label>
                                 <label>Групповое<input type="checkbox" name="k${i}-2" value="Г"></label>
-                                <label>Сопровождение<input type="checkbox" name="k${i}-3" value="С"></label><br>
+                                <label>Сопровождение<input type="checkbox" name="k${i}-3" value="С"></label>
+                                <label>Консультация<input type="checkbox" name="k${i}-4" value="К"></label><br>
                                 <label>Дистант<input type="checkbox" class="distant" name="d${i}" value="Д"></label>
                             </span><br>
                         </span>`
@@ -98,6 +99,12 @@
                     {% for i in range(2, 8) %}
                         <option>{{ "%s — %s.%s.%s"% (week_days[(today - timedelta(days=i)).isoweekday()], (today - timedelta(days=i)).day, (today - timedelta(days=i)).month, (today - timedelta(days=i)).year) }}</option>
                     {%  endfor %}
+
+                    {% for i in range(8, 31) %}
+                        <option>{{ "%s.%s.%s — %s"% ((today - timedelta(days=i)).day, (today - timedelta(days=i)).month, (today - timedelta(days=i)).year, week_days[(today - timedelta(days=i)).isoweekday()]) }}</option>
+                    {%  endfor %}
+
+
                 </select>
             </label><br>
 

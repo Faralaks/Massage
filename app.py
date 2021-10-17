@@ -324,9 +324,11 @@ def make_count_str(data, div=""):
 
 if __name__ == '__main__':
     bot_listener = Thread(target=lambda: bot.run(tele_bot), daemon=True)
-    #bot_all_sender = Thread(target=lambda: bot.all_auto_sender(tele_bot), daemon=True)
+    bot_db_sender = Thread(target=lambda: bot.db_auto_sender(tele_bot), daemon=True)
+    bot_zip_sender = Thread(target=lambda: bot.zip_auto_sender(tele_bot), daemon=True)
 
     bot_listener.start()
-    #bot_all_sender.start()
+    bot_zip_sender.start()
+    bot_db_sender.start()
 
     app.run(host=HOST, port=PORT)
