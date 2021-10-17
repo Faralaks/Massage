@@ -14,6 +14,6 @@ COPY config.py .
 COPY templates ./templates
 COPY static ./static
 
-EXPOSE 5000
+EXPOSE 80
 
 CMD ["python3", "./app.py"]
