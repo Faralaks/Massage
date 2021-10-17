@@ -51,8 +51,8 @@
                             <span class="dn" id="${i}">
                                 <label>Индивидуальное<input  type="checkbox" name="k${i}-1" value="И"></label>
                                 <label>Групповое<input type="checkbox" name="k${i}-2" value="Г"></label>
-                                <label>Сопровождение<input type="checkbox" name="k${i}-3" value="С"></label>
-                                <label>Дистант<input type="checkbox" name="k${i}-4" value="Д"></label>
+                                <label>Сопровождение<input type="checkbox" name="k${i}-3" value="С"></label><br>
+                                <label>Дистант<input type="checkbox" class="distant" name="d${i}" value="Д"></label>
                             </span><br>
                         </span>`
                 $("#namesPlace").append(tmpl)
@@ -64,12 +64,13 @@
         function save() {
             let req = {kinders: {}, date: $('#date option:selected').text()}
             $('input:checkbox:checked').each(function() {
+                if (this.className === "distant") return
                 let ch = $(this)
-                let kinder = kinders[+ch.parent().parent().attr("id")][0]
+                let parent = ch.parent().parent()
+                let kinder = kinders[+parent.attr("id")][0]
                 if (!req.kinders[kinder]) req.kinders[kinder] = []
-                req.kinders[kinder].push(ch.val())
+                req.kinders[kinder].push(ch.val() + (parent.find(".distant:checked").length?"Д":""))
             });
-            console.log(req)
             req.kinders = JSON.stringify(req.kinders)
             if (req.kinders === "{}") { alert("Ничего не выбрано!"); return}
             console.log(req)

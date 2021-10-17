@@ -1,12 +1,15 @@
 #!/usr/bin/python3
 import json
 from string import  ascii_uppercase as ALPH
+
+import telebot
+from collections import Counter
 from flask import Flask, g, redirect, render_template, request, url_for, session, send_file, jsonify
 import sqlite3
 from openpyxl import Workbook, load_workbook
 from io import  BytesIO
 from  datetime import date, timedelta
-from config import DB_PATH, HOST, PORT, LOGIN, PAS, O_LOGIN
+from config import DB_PATH, HOST, PORT, LOGIN, PAS, O_LOGIN, TELEGRAM_TOKEN, TRUSTED
 from threading import Thread
 import bot
 from base64 import b64encode as b64enc, b64decode as b64dec
@@ -32,6 +35,15 @@ def p(*items):
     print('\n-----------------------\n')
 
 
+tele_bot = telebot.TeleBot(TELEGRAM_TOKEN)
+
+@tele_bot.message_handler(content_types=['text'])
+def get_text_messages(message):
+    uid = message.from_user.id
+    if uid in TRUSTED:
+        bot.send_files(uid, tele_bot)
+    else:
+        tele_bot.send_message(uid, "Ты чужой, почему твой UID = %d?"%uid)
 
 
 def get_db():
@@ -42,7 +54,7 @@ def get_db():
 
 
 @app.teardown_appcontext
-def close_connection(exception):
+def close_connection(_):
     db = getattr(g, 'db', None)
     if db is not None:
         db.close()
@@ -107,6 +119,7 @@ def make_xlsx(stream, when="cur"):
     xlsx.save(stream)
     xlsx.close()
     stream.seek(0)
+    return stream.getvalue()
 
 
 @app.route('/download/<when>')
@@ -173,7 +186,7 @@ def delete():
     cur = db.cursor()
     form_data = form('delList').split(' — ')
     uid = form_data[0] +' — '+ form_data[1]
-    data = cur.execute("DELETE FROM people WHERE uid=?", (uid, ))
+    cur.execute("DELETE FROM people WHERE uid=?", (uid, ))
     db.commit()
     return redirect(url_for('index'))
 
@@ -265,7 +278,7 @@ def o_make_xlsx(stream, when="cur"):
     int_offset = 3
     let_offset = 3
     for i, k in enumerate(kinders_from_db, int_offset):
-        kinders[k[0]] = [str(i), k[1], k[2]]
+        kinders[k[0]] = [str(i), k[1], k[2], []]
         num = str(i)
         sheet['A'+num] = i-int_offset+1
         sheet['B'+num] = k[1]
@@ -274,34 +287,46 @@ def o_make_xlsx(stream, when="cur"):
     sheet["A"+str(int_offset-1)] = "№"
     sheet["B"+str(int_offset-1)] = "Ф.И. ребенка"
     sheet["C"+str(int_offset-1)] = "Класс"
-
+    pre_data = {}
+    last_col = let_offset
     for day in range(1, 32):
         zans = cur.execute('SELECT d, m, tp, uid FROM zan WHERE  d=? AND m=? AND y=?', (day, m, dt.year)).fetchall()
-        if zans == []: continue
+        if not zans: continue
         for z in zans:
             k = kinders[z[3]]
             call = ALPH[let_offset]+k[0]
-            if sheet[call].value: sheet[call] = sheet[call].value +  z[2]
-            else: sheet[call] = z[2]
+            if not pre_data.get(call): pre_data[call] = []
+            pre_data[call].append(z[2])
+            k[3].append(z[2])
+            if let_offset > last_col: last_col = let_offset
 
         sheet[ALPH[let_offset]+str(int_offset-1)] = day
         sheet[ALPH[let_offset]+str(int_offset+len(kinders.keys()))] = day
         let_offset += 1
 
+    for cell, val in pre_data.items():
+        sheet[cell] = make_count_str(val)
+    for k  in kinders.values():
+        sheet[ALPH[last_col+1]+k[0]] = make_count_str(k[3], "\n")
+    sheet[ALPH[last_col+1]+str(int_offset-1)] = "Итог"
+
     xlsx.save(stream)
     xlsx.close()
     stream.seek(0)
+    return stream.getvalue()
 
+def make_count_str(data, div=""):
+    s = ""
+    for t, c in Counter(data).items():
+        s += (str(c) + "-" + t) if c > 1 else t
+        s += div
+    return s
 
 if __name__ == '__main__':
-    bot_listener = Thread(target=bot.run, daemon=True)
-    bot_db_sender = Thread(target=bot.db_auto_sender, daemon=True)
-    #bot_cur_xl_sender = Thread(target=bot.cur_xl_auto_sender, daemon=True)
-    #bot_prev_xl_sender = Thread(target=bot.prev_xl_auto_sender, daemon=True)
+    bot_listener = Thread(target=lambda: bot.run(tele_bot), daemon=True)
+    #bot_all_sender = Thread(target=lambda: bot.all_auto_sender(tele_bot), daemon=True)
 
     bot_listener.start()
-    bot_db_sender.start()
-    #bot_cur_xl_sender.start()
-    #bot_prev_xl_sender.start()
+    #bot_all_sender.start()
 
     app.run(host=HOST, port=PORT)
